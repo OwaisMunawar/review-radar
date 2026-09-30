@@ -18,7 +18,8 @@ DEFAULT_OPENAI_EMBEDDINGS = "openai:text-embedding-3-small"
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # Empty values in .env mean "not set", so a copied .env.example is valid as is.
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_ignore_empty=True)
 
     database_url: str = (
         "postgresql+asyncpg://review_radar:review_radar@localhost:55432/review_radar"

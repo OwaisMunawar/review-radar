@@ -20,6 +20,7 @@ app = typer.Typer(
     add_completion=False,
     help="Review Radar: triage store reviews, flag release regressions, draft replies.",
 )
+# Source checkout layout; the container runs from a directory holding alembic.ini.
 BACKEND = Path(__file__).resolve().parents[2]
 
 
@@ -35,7 +36,8 @@ def migrate() -> None:
     from alembic import command  # noqa: PLC0415 - keep CLI startup light
     from alembic.config import Config  # noqa: PLC0415
 
-    command.upgrade(Config(str(BACKEND / "alembic.ini")), "head")
+    local = Path.cwd() / "alembic.ini"
+    command.upgrade(Config(str(local if local.exists() else BACKEND / "alembic.ini")), "head")
 
 
 @app.command()
