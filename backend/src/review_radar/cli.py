@@ -82,6 +82,32 @@ def serve(
     uvicorn.run("review_radar.api.main:app", host=host, port=port, proxy_headers=True)
 
 
+@app.command(name="eval")
+def eval_triage(
+    min_accuracy: Annotated[float, typer.Option(help="Fail below this category accuracy.")] = 0.0,
+    min_macro_f1: Annotated[float, typer.Option(help="Fail below this category macro-F1.")] = 0.0,
+    model: Annotated[str | None, typer.Option(help="Override MODEL for this run.")] = None,
+    out: Annotated[Path | None, typer.Option(help="Write metrics as JSON.")] = None,
+) -> None:
+    """Score triage against the labelled set: accuracy, macro-F1, confusion matrix."""
+    from review_radar.adapters.llm.agents import build_models  # noqa: PLC0415
+    from review_radar.evals.triage_eval import render, run_triage_eval  # noqa: PLC0415
+
+    settings = _settings()
+    model_name = model or settings.resolved_model
+    result = asyncio.run(run_triage_eval(build_models(model_name).triager, model_name=model_name))
+    typer.echo(render(result))
+    if out:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(result.to_json(), indent=2) + "\n")
+    if result.category.accuracy < min_accuracy or result.category.macro_f1 < min_macro_f1:
+        typer.echo(
+            f"\nbelow threshold: accuracy >= {min_accuracy:.2f}, macro-F1 >= {min_macro_f1:.2f}",
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
+
 @app.command()
 def openapi(out: Annotated[Path | None, typer.Option(help="Write to a file.")] = None) -> None:
     """Print the OpenAPI schema (the web client generates its types from it)."""

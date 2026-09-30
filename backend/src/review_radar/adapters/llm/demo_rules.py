@@ -14,7 +14,8 @@ from review_radar.domain.models import Category, Sentiment, Severity, Triage
 
 CRASH = (
     r"crash|closes itself|force clos|freez|se cierra|se cuelga|stürzt|absturz|\bplant(e|age)|"
-    r"fecha sozinho|fecha quando|trava|travou|o app fecha"
+    r"fecha sozinho|fecha quando|trava|travou|o app fecha|\bquit(s|ting)?\b|shuts down|"
+    r"closed? (straight|right) away"
 )
 LOGIN = (
     r"log ?in|sign ?in|sign-in|iniciar sesión|inicio de sesión|anmeld|login|connexion|"
@@ -27,11 +28,12 @@ FIXED = (
 WANT = (
     r"would love|please add|would be great|i'?d like|i wish|wish (it|there)|me encantaría|"
     r"añadan|agreguen|wünsche|bitte .*(hinzufügen|einbauen)|ce serait|merci d'ajouter|"
-    r"j'aimerais|seria ótimo|adicionem|gostaria"
+    r"j'aimerais|seria ótimo|adicionem|gostaria|any chance|^add\b"
 )
 PRAISE = (
     r"\blove\b|great|best|excellent|amazing|awesome|perfect|encanta|excelente|genial|toll|"
-    r"super|klasse|génial|adoro|ótimo|incrível|fácil|easy to use|übersichtlich|efficace"
+    r"super|klasse|génial|adoro|ótimo|incrível|fácil|easy to use|übersichtlich|efficace|"
+    r"\bnice\b|brilliant|\bgood\b|parfait|muito bom|changed how"
 )
 
 
@@ -52,6 +54,12 @@ def _has(pattern: str) -> Callable[[str, int], bool]:
 def _all(*patterns: str) -> Callable[[str, int], bool]:
     compiled = [re.compile(p) for p in patterns]
     return lambda text, _rating: all(c.search(text) for c in compiled)
+
+
+def _negative(pattern: str) -> Callable[[str, int], bool]:
+    """Complaint-only rules: a 4-star review that mentions reminders is not a bug report."""
+    compiled = re.compile(pattern)
+    return lambda text, rating: rating <= 3 and compiled.search(text) is not None
 
 
 def _positive(pattern: str) -> Callable[[str, int], bool]:
@@ -89,7 +97,9 @@ RULES: tuple[Rule, ...] = (
         "Users get logged out or cannot sign in",
         _has(
             r"log(ging|s|ged)? (me )?out|session|locked out|password|can'?t (sign|log) ?in|"
-            r"cierra la sesión|sesión|abgemeldet|sitzung|déconnect|deslogad|sessão"
+            r"cierra la sesión|sesión|abgemeldet|sitzung|déconnect|deslogad|sessão|"
+            r"get into my account|passcode|face id|touch id|two-factor|2fa|verification code|"
+            r"me connecter|minha conta|mi cuenta|mein konto"
         ),
     ),
     Rule(
@@ -99,7 +109,8 @@ RULES: tuple[Rule, ...] = (
         "Charged for Pro but it is not active",
         _has(
             r"charged|refund|restore purchase|free plan|cobraron|cobro|abgebucht|facturé|"
-            r"cobrad|reembolso|rückerstatt|remboursement"
+            r"cobrad|reembolso|rückerstatt|remboursement|renewed|billing|payment|zahlung|"
+            r"pagamento|pago|freigeschaltet|acesso ao pro|versión gratuita"
         ),
     ),
     Rule(
@@ -151,18 +162,14 @@ RULES: tuple[Rule, ...] = (
         ),
     ),
     Rule(
-        "reminders",
-        Category.OTHER,
+        "hard_to_use",
+        Category.UX,
         Severity.MEDIUM,
-        "Reminders arrive late or not at all",
-        _has(r"reminder|notification|recordatorio|erinnerung|rappel|lembrete|notificaç"),
-    ),
-    Rule(
-        "sync",
-        Category.OTHER,
-        Severity.HIGH,
-        "Calendar and device sync is broken",
-        _has(r"sync|calendar|sincroniz|synchron|kalender|agenda"),
+        "Interface is hard to use",
+        _negative(
+            r"button|tiny|layout|font|icons?\b|design|too many steps|onboarding|interface|"
+            r"interfaz|unübersichtlich|hard to read|permissions"
+        ),
     ),
     Rule(
         "watch", Category.FEATURE_REQUEST, Severity.LOW, "Wants an Apple Watch app", _has(r"watch")
@@ -181,6 +188,21 @@ RULES: tuple[Rule, ...] = (
         "Wants to export tasks to CSV or PDF",
         _has(r"export"),
     ),
+    Rule("feature", Category.FEATURE_REQUEST, Severity.LOW, "Asks for a new feature", _has(WANT)),
+    Rule(
+        "reminders",
+        Category.OTHER,
+        Severity.MEDIUM,
+        "Reminders arrive late or not at all",
+        _negative(r"reminder|notification|recordatorio|erinnerung|rappel|lembrete|notificaç"),
+    ),
+    Rule(
+        "sync",
+        Category.OTHER,
+        Severity.HIGH,
+        "Calendar and device sync is broken",
+        _negative(r"sync|calendar|sincroniz|synchron|kalender|agenda"),
+    ),
     Rule(
         "habits",
         Category.PRAISE,
@@ -195,7 +217,6 @@ RULES: tuple[Rule, ...] = (
         "Loves the new focus timer",
         _positive(r"focus|temporizador|fokus|minuteur|timer"),
     ),
-    Rule("feature", Category.FEATURE_REQUEST, Severity.LOW, "Asks for a new feature", _has(WANT)),
     Rule(
         "praise", Category.PRAISE, Severity.LOW, "Happy with the planner overall", _positive(PRAISE)
     ),
