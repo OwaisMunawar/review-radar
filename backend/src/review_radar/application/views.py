@@ -119,6 +119,8 @@ class ReleaseSummaryView(View):
 
 
 class SegmentComparisonView(View):
+    baseline_version: str
+    candidate_version: str
     kind: SegmentKind
     key: str
     label: str

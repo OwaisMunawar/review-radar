@@ -27,6 +27,8 @@ PROBLEM_CATEGORIES = tuple(
 
 def _view(c: SegmentComparison) -> SegmentComparisonView:
     return SegmentComparisonView(
+        baseline_version=c.baseline_version,
+        candidate_version=c.candidate_version,
         kind=c.segment.kind,
         key=c.segment.key,
         label=c.segment.label,
