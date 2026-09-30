@@ -56,6 +56,10 @@ ignore = [
 "tests/**" = ["S101", "PLR0915", "S105", "S106"]
 "alembic/**" = ["ERA001"]
 
+[tool.ruff.lint.isort]
+# The migrations folder is called alembic too; the import is the library.
+known-third-party = ["alembic"]
+
 [tool.ruff.lint.flake8-type-checking]
 runtime-evaluated-base-classes = [
     "pydantic.BaseModel",

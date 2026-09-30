@@ -5,8 +5,11 @@ from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+
+from review_radar.domain.trend import Trend
 
 
 class Store(StrEnum):
@@ -153,3 +156,36 @@ class LlmUsage:
     output_tokens: int
     cost_usd: Decimal
     duration_ms: int
+
+
+EMBEDDING_DIMENSIONS = 256
+"""Fixed by the pgvector column. OpenAI text-embedding-3 models accept a
+`dimensions` argument, so real and demo embeddings share one schema."""
+
+
+@dataclass(frozen=True, slots=True)
+class StoredReview:
+    id: UUID
+    store: Store
+    external_id: str
+    rating: int
+    body: str
+    created_at: datetime
+    title: str | None = None
+    language: str | None = None
+    app_version: str | None = None
+    territory: str | None = None
+    author: str | None = None
+    triage: Triage | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class Theme:
+    id: UUID
+    title: str
+    size: int
+    dominant_category: Category
+    trend: Trend
+    weekly_counts: tuple[int, ...]
+    representative_ids: tuple[UUID, ...]
+    member_ids: tuple[UUID, ...]
