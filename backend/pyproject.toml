@@ -1,0 +1,91 @@
+[project]
+name = "review-radar"
+version = "0.1.0"
+description = "Triage App Store and Google Play reviews, spot release regressions and draft replies a person approves."
+authors = [{ name = "Owais Munawwar", email = "owais.munawar@gmail.com" }]
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.20.0",
+    "asyncpg>=0.31.0",
+    "fastapi>=0.142.1",
+    "httpx>=0.28.1",
+    "numpy>=2.5.3",
+    "pgvector>=0.5.0",
+    "pydantic-ai-slim[openai]>=2.52.0",
+    "pydantic-evals>=2.52.0",
+    "pydantic-settings>=2.15.0",
+    "pyjwt[crypto]>=2.15.1",
+    "sqlalchemy[asyncio]>=2.1.1",
+    "structlog>=26.1.0",
+    "typer>=0.27.2",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[project.scripts]
+review-radar = "review_radar.cli:app"
+
+[dependency-groups]
+dev = [
+    "mypy==2.3.1",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
+    "ruff==0.16.9",
+    "testcontainers[postgres]>=4.15.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.25,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F", "I", "B", "UP", "SIM", "RUF", "N", "ASYNC", "S", "PT", "RET", "PL", "TC", "C4", "DTZ", "ERA",
+]
+ignore = [
+    "PLR0913", # use cases take their collaborators explicitly
+    "PLR2004", # thresholds are named where they matter
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "PLR0915", "S105", "S106"]
+"alembic/**" = ["ERA001"]
+
+[tool.ruff.lint.flake8-type-checking]
+runtime-evaluated-base-classes = [
+    "pydantic.BaseModel",
+    "pydantic_settings.BaseSettings",
+    "sqlalchemy.orm.DeclarativeBase",
+]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+files = ["src", "tests"]
+plugins = ["pydantic.mypy"]
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["pgvector.*", "testcontainers.*"]
+ignore_missing_imports = true
+
+[tool.pytest]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+addopts = ["--strict-markers"]
+
+[tool.coverage.run]
+branch = true
+source = ["review_radar"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError", "\\.\\.\\."]
