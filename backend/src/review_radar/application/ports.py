@@ -154,11 +154,20 @@ class UsageRepository(Protocol):
 class UnitOfWork(Protocol):
     """One transaction. Repositories share its session; nothing commits implicitly."""
 
-    reviews: ReviewRepository
-    triages: TriageRepository
-    themes: ThemeRepository
-    replies: ReplyRepository
-    usage: UsageRepository
+    @property
+    def reviews(self) -> ReviewRepository: ...
+
+    @property
+    def triages(self) -> TriageRepository: ...
+
+    @property
+    def themes(self) -> ThemeRepository: ...
+
+    @property
+    def replies(self) -> ReplyRepository: ...
+
+    @property
+    def usage(self) -> UsageRepository: ...
 
     async def __aenter__(self) -> Self: ...
 

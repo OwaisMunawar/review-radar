@@ -55,6 +55,8 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "PLR0915", "S105", "S106"]
 "alembic/**" = ["ERA001"]
+# Review text is data; wrapping it mid-sentence hurts more than a long line.
+"scripts/**" = ["E501", "S311"]
 
 [tool.ruff.lint.isort]
 # The migrations folder is called alembic too; the import is the library.
@@ -70,7 +72,7 @@ runtime-evaluated-base-classes = [
 [tool.mypy]
 strict = true
 python_version = "3.12"
-files = ["src", "tests"]
+files = ["src", "tests", "scripts"]
 plugins = ["pydantic.mypy"]
 warn_unreachable = true
 
