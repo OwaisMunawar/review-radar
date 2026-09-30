@@ -18,6 +18,7 @@ from review_radar.adapters.db.tables import (
     ThemeRow,
     TriageRow,
 )
+from review_radar.application.ports import ThemeLabel
 from review_radar.application.views import (
     AuditView,
     CategoryCount,
@@ -308,7 +309,7 @@ class SqlReadModel:
         ]
         return sorted(views, key=lambda v: version_key(v.version))
 
-    async def release_samples(self) -> tuple[list[ReleaseSample], dict[str, str]]:
+    async def release_samples(self) -> tuple[list[ReleaseSample], dict[str, ThemeLabel]]:
         async with self._sessions() as session:
             totals = (
                 await session.execute(
@@ -334,7 +335,11 @@ class SqlReadModel:
                     .group_by(ReviewRow.app_version, ThemeMemberRow.theme_id)
                 )
             ).all()
-            titles = (await session.execute(select(ThemeRow.id, ThemeRow.title))).all()
+            titles = (
+                await session.execute(
+                    select(ThemeRow.id, ThemeRow.title, ThemeRow.dominant_category)
+                )
+            ).all()
 
         counts: dict[str, dict[str, int]] = defaultdict(dict)
         for version, category, n in categories:
@@ -345,7 +350,10 @@ class SqlReadModel:
             ReleaseSample(version=str(v), total=n, counts=counts[str(v)])
             for v, n in sorted(totals, key=lambda row: version_key(str(row[0])))
         ]
-        return samples, {f"theme:{tid}": title for tid, title in titles}
+        return samples, {
+            f"theme:{tid}": ThemeLabel(title=title, category=Category(category))
+            for tid, title, category in titles
+        }
 
     async def _replies(
         self,

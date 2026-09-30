@@ -9,7 +9,7 @@ from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from review_radar.adapters.db.read_model import SqlReadModel
-from review_radar.application.ports import NewTheme
+from review_radar.application.ports import NewTheme, ThemeLabel
 from review_radar.application.views import ReviewFilters
 from review_radar.domain.models import (
     EMBEDDING_DIMENSIONS,
@@ -222,7 +222,7 @@ async def test_themes_and_read_model(
     by_version = {s.version: s for s in samples}
     assert by_version["2.3.0"].total == 2
     assert by_version["2.3.0"].counts == {"category:crash": 2, f"theme:{theme_id}": 2}
-    assert labels == {f"theme:{theme_id}": "Crash on sign-in"}
+    assert labels == {f"theme:{theme_id}": ThemeLabel("Crash on sign-in", Category.CRASH)}
 
     async with uow_factory() as uow:
         assert await uow.themes.replace_all([]) == []

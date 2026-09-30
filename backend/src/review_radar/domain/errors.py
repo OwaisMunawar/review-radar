@@ -16,7 +16,6 @@ class ErrorCode(StrEnum):
     SOURCE_NOT_CONFIGURED = "source_not_configured"
     STORE_API = "store_api_error"
     LLM = "llm_error"
-    POSTING_DISABLED = "posting_disabled"
 
 
 class AppError(Exception):
@@ -50,7 +49,3 @@ class StoreApiError(AppError):
 
 class LlmError(AppError):
     code = ErrorCode.LLM
-
-
-class PostingDisabledError(AppError):
-    code = ErrorCode.POSTING_DISABLED

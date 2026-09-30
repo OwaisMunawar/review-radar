@@ -50,6 +50,9 @@ select = [
 ignore = [
     "PLR0913", # use cases take their collaborators explicitly
     "PLR2004", # thresholds are named where they matter
+    "TC001",   # runtime imports of our own types are cheap and keep annotations honest
+    "TC002",
+    "TC003",
 ]
 
 [tool.ruff.lint.per-file-ignores]

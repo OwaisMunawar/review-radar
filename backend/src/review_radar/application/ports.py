@@ -103,6 +103,12 @@ class EmbeddedSummary:
 
 
 @dataclass(frozen=True, slots=True)
+class ThemeLabel:
+    title: str
+    category: Category
+
+
+@dataclass(frozen=True, slots=True)
 class NewTheme:
     title: str
     dominant_category: Category
@@ -200,7 +206,7 @@ class ReadModel(Protocol):
 
     async def releases(self) -> list[ReleaseSummaryView]: ...
 
-    async def release_samples(self) -> tuple[list[ReleaseSample], dict[str, str]]:
+    async def release_samples(self) -> tuple[list[ReleaseSample], dict[str, ThemeLabel]]:
         """Per-version totals with category and theme counts, plus theme labels by key."""
         ...
 
