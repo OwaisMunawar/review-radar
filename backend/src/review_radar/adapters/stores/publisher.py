@@ -1,5 +1,6 @@
 """Reply publishers. The dry-run publisher is what demo mode and unconfigured stores use."""
 
+from collections.abc import Mapping
 from typing import Protocol
 
 from review_radar.domain.errors import SourceNotConfiguredError
@@ -20,7 +21,7 @@ class DryRunPublisher:
 
 
 class StorePublisher:
-    def __init__(self, repliers: dict[Store, _Replier]) -> None:
+    def __init__(self, repliers: Mapping[Store, _Replier]) -> None:
         self._repliers = repliers
 
     @property

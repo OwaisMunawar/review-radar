@@ -56,7 +56,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "PLR0915", "S105", "S106"]
+"tests/**" = ["S101", "PLR0915", "PLR0917", "S105", "S106"]
 "alembic/**" = ["ERA001"]
 # Review text is data; wrapping it mid-sentence hurts more than a long line.
 "scripts/**" = ["E501", "S311"]
